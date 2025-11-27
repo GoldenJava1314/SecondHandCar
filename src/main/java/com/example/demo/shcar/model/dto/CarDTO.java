@@ -13,7 +13,7 @@ public class CarDTO {
     private String brand;
     private String model;
     private Integer year;
-    private Integer miles;
+    private Integer mileage;
     private Integer price;
     private String description;
     private String imageUrl;

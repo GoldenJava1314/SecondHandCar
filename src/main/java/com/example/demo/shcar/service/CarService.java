@@ -42,7 +42,7 @@ public class CarService {
         car.setBrand(carDTO.getBrand());
         car.setModel(carDTO.getModel());
         car.setYear(carDTO.getYear());
-        car.setMiles(carDTO.getMileage());
+        car.setMileage(carDTO.getMileage());
         car.setPrice(carDTO.getPrice());
         car.setImagesJson("[]");
         car.setSeller(seller);

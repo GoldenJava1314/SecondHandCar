@@ -49,16 +49,19 @@ public class UserService {
 
     // 登入
     public UserResponseDTO login(UserLoginDTO loginDTO) {
-
-        User user = userRepository.findByUsername(loginDTO.getUsername());
-
-        if (user == null) {
-            throw new RuntimeException("User not found");
+        // ✅ 新增：檢查空輸入
+        if (loginDTO.getUsername() == null || loginDTO.getUsername().trim().isEmpty() ||
+            loginDTO.getPassword() == null || loginDTO.getPassword().trim().isEmpty()) {
+            throw new RuntimeException("帳號或密碼不能為空");
         }
 
-        // 密碼比對
+        User user = userRepository.findByUsername(loginDTO.getUsername().trim());
+        if (user == null) {
+            throw new RuntimeException("用戶不存在");
+        }
+
         if (!BCrypt.checkpw(loginDTO.getPassword(), user.getPassword())) {
-            throw new RuntimeException("Invalid password");
+            throw new RuntimeException("密碼錯誤");
         }
 
         return modelMapper.map(user, UserResponseDTO.class);

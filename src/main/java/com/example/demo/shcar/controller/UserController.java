@@ -50,17 +50,11 @@ public class UserController {
     public ApiResponse<UserResponseDTO> login(@RequestBody UserLoginDTO loginDTO, HttpSession session) {
         try {
             UserResponseDTO userDTO = userService.login(loginDTO);
-
-            // 取得完整 User 物件
             User user = userService.findById(userDTO.getId());
-
-            // 存進 session（統一 key）
             session.setAttribute("LOGIN_USER", user);
-
             return new ApiResponse<>(200, "登入成功", userDTO);
-
-        } catch (Exception e) {
-            return new ApiResponse<>(400, "其他錯誤: " + e.getMessage(), null);
+        } catch (RuntimeException e) {
+            return new ApiResponse<>(400, e.getMessage(), null);  // ✅ 直接回傳錯誤訊息
         }
     }
 }

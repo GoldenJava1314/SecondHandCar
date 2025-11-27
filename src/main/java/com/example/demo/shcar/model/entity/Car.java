@@ -34,7 +34,7 @@ public class Car {
     private Integer year;
 
     @Column(nullable = false)
-    private Integer miles;
+    private Integer mileage;
 
     @Column(nullable = false)
     private int price;
