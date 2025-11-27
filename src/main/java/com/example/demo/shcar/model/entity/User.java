@@ -1,0 +1,44 @@
+package com.example.demo.shcar.model.entity;
+
+import java.util.List;
+import java.util.Set;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+@Entity
+@Table(name = "user")  // 對應資料表名稱
+public class User {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+	@Column(length = 50, unique = true, nullable = false)
+    private String username;   // 登入用帳號
+    
+	@Column(length = 255, nullable = false)
+    private String password;   // 登入密碼（建議之後用加密）
+	
+	@Column(length = 255, nullable = true)
+    private String sellerName;       // 使用者名稱（賣家名稱）
+    
+	@Column(length = 255, nullable = true)
+	private String phone; // 聯絡電話
+	
+	
+    @Column(nullable = true)
+    private String email;      // 聯絡 email
+}
