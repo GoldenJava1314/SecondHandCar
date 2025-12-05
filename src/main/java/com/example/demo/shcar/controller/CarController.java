@@ -2,14 +2,18 @@ package com.example.demo.shcar.controller;
 
 import java.util.List;
 
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.example.demo.shcar.model.dto.CarDTO;
 import com.example.demo.shcar.model.dto.CarUploadDTO;
 import com.example.demo.shcar.model.dto.UserResponseDTO;
+import com.example.demo.shcar.model.entity.Car;
 import com.example.demo.shcar.model.entity.User;
+import com.example.demo.shcar.repository.CarRepository;
 import com.example.demo.shcar.repository.UserRepository;
 import com.example.demo.shcar.response.ApiResponse;
 import com.example.demo.shcar.service.CarService;
@@ -26,10 +30,16 @@ public class CarController {
 	private UserRepository userRepository;
 	
 	@Autowired
+	private CarRepository carRepository;
+	
+	@Autowired
 	private UserService userService;
 	
     @Autowired
     private CarService carService;
+    
+    @Autowired
+    private ModelMapper modelMapper;
 
     @GetMapping
     public List<CarDTO> list() {
@@ -89,4 +99,107 @@ public class CarController {
             return new ApiResponse<>(400, e.getMessage(), null);
         }
     }
+    
+// 加入關注    
+    @PostMapping("/favorite/{carId}")
+    public ResponseEntity<?> addFavorite(
+            @PathVariable Long carId,
+            HttpSession session
+    ) {
+        User loginUser = (User) session.getAttribute("LOGIN_USER");
+        if (loginUser == null) {
+            return ResponseEntity.status(401).body("未登入");
+        }
+
+        User user = userRepository.findById(loginUser.getId())
+                        .orElseThrow(() -> new RuntimeException("找不到使用者"));
+
+        Car car = carRepository.findById(carId)
+                        .orElseThrow(() -> new RuntimeException("找不到車輛"));
+
+        if (!user.getFavoriteCars().contains(car)) {
+            user.getFavoriteCars().add(car);
+            userRepository.save(user);
+        }
+
+        // 更新 session
+        session.setAttribute("LOGIN_USER", user);
+
+        // 回傳最新收藏 ID 列表
+        List<Long> ids = user.getFavoriteCars()
+                             .stream()
+                             .map(Car::getId)
+                             .toList();
+
+        return ResponseEntity.ok(ids);
+    }
+    
+// 取消關注
+    @DeleteMapping("/favorite/{carId}")
+    public ResponseEntity<?> removeFavorite(
+            @PathVariable Long carId,
+            HttpSession session
+    ) {
+        User loginUser = (User) session.getAttribute("LOGIN_USER");
+        if (loginUser == null) {
+            return ResponseEntity.status(401).body("未登入");
+        }
+
+        User user = userRepository.findById(loginUser.getId())
+                        .orElseThrow(() -> new RuntimeException("找不到使用者"));
+
+        Car car = carRepository.findById(carId)
+                        .orElseThrow(() -> new RuntimeException("找不到車輛"));
+
+        user.getFavoriteCars().remove(car);
+        userRepository.save(user);
+
+        // 更新 session
+        session.setAttribute("LOGIN_USER", user);
+
+        List<Long> ids = user.getFavoriteCars()
+                             .stream()
+                             .map(Car::getId)
+                             .toList();
+
+        return ResponseEntity.ok(ids);
+    }
+    
+    //查看是否已收藏
+    @GetMapping("/favorite/check/{carId}")
+    public ResponseEntity<?> checkFavorite(
+            @PathVariable Long carId,
+            HttpSession session
+    ) {
+        User user = (User) session.getAttribute("LOGIN_USER");
+        if (user == null) return ResponseEntity.ok(false);
+
+        boolean fav = user.getFavoriteCars().stream()
+                          .anyMatch(c -> c.getId().equals(carId));
+
+        return ResponseEntity.ok(fav);
+    }
+    
+    //取得我的收藏清單
+    @GetMapping("/favorite/list")
+    public ResponseEntity<?> getMyFavorites(HttpSession session) {
+        User loginUser = (User) session.getAttribute("LOGIN_USER");
+        if (loginUser == null) {
+            return ResponseEntity.ok(List.of());
+        }
+
+        User user = userRepository.findById(loginUser.getId())
+                        .orElseThrow(() -> new RuntimeException("找不到使用者"));
+
+        // 使用 DTO，避免 liking 互相序列化造成 400
+        List<CarDTO> list = user.getFavoriteCars()
+                                .stream()
+                                .map(carService::convertToDTO)
+                                .toList();
+
+        return ResponseEntity.ok(list);
+    }
+    
+
+    
 }

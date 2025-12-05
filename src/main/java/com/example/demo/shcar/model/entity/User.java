@@ -1,13 +1,21 @@
 package com.example.demo.shcar.model.entity;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -41,4 +49,14 @@ public class User {
 	
     @Column(nullable = true)
     private String email;      // 聯絡 email
+    
+    @ManyToMany(cascade = { CascadeType.PERSIST, CascadeType.MERGE })
+    @JoinTable(
+        name = "user_favorite_cars",
+        joinColumns = @JoinColumn(name = "user_id"),
+        inverseJoinColumns = @JoinColumn(name = "car_id")
+    )
+    @JsonIgnore // <- 防止序列化 User -> Car -> User 無限循環
+    private List<Car> favoriteCars = new ArrayList<>();
+    
 }

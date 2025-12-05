@@ -1,5 +1,6 @@
 package com.example.demo.shcar.service;
 
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -79,6 +80,12 @@ public class CarService {
             List<String> newUrls = new ArrayList<>();
 
             for (MultipartFile f : files) {
+            	
+            	if (f == null || f.isEmpty() || f.getSize() == 0) {
+                    System.out.println("跳過空檔案");
+                    continue;
+                }
+            	
 
                 if (f.isEmpty()) continue;
 
@@ -86,8 +93,20 @@ public class CarService {
                         + "_" + f.getOriginalFilename();
 
                 Path path = Paths.get(uploadDir + fileName);
-                Files.write(path, f.getBytes());
+
+                try (InputStream is = f.getInputStream()) {
+                    Files.copy(is, path);
+                }
+
                 newUrls.add("http://localhost:8080/uploads/" + fileName);
+                System.out.println("寫入路徑：" + path.toAbsolutePath());
+                
+                System.out.println(
+                        "接收到圖片：name=" + f.getOriginalFilename()
+                        + " size=" + f.getSize()
+                        + " empty=" + f.isEmpty()
+                    );
+                
             }
 
             // 合併原有圖片
@@ -106,12 +125,14 @@ public class CarService {
             return convertToDTO(carRepository.save(car));
 
         } catch (Exception e) {
+        	e.printStackTrace();  // ★ 這行很重要
             throw new RuntimeException("圖片上傳失敗：" + e.getMessage());
+            
         }
     }
 
     // Entity -> DTO (會把 imagesJson 轉成 List<String>)
-    private CarDTO convertToDTO(Car car) {
+    public CarDTO convertToDTO(Car car) {
         CarDTO dto = modelMapper.map(car, CarDTO.class);
 
         if (car.getImagesJson() != null && !car.getImagesJson().isBlank()) {
