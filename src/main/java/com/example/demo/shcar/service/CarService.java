@@ -67,7 +67,7 @@ public class CarService {
     public CarDTO getCarById(Long id) {
         Car car = carRepository.findById(id)
         		.filter(c -> !c.isDeleted())   // ★ 避免看到刪除的車
-        		.orElseThrow(() -> new RuntimeException("Car not found"));
+        		.orElseThrow(() -> new RuntimeException("查無此車輛資訊"));
         return convertToDTO(car);
     }
 
