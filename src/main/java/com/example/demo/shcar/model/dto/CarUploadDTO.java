@@ -14,4 +14,5 @@ public class CarUploadDTO {
     private Integer year;
     private Integer mileage;
     private Integer price;
+    private String sellerLineId; // 新增 Line ID 欄位
 }

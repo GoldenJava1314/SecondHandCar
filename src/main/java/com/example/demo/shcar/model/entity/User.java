@@ -59,4 +59,8 @@ public class User {
     @JsonIgnore // <- 防止序列化 User -> Car -> User 無限循環
     private List<Car> favoriteCars = new ArrayList<>();
     
+    @Column(length = 100, nullable = true)
+    private String sellerLineId;  // 賣家 Line ID
+    
+    
 }

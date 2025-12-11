@@ -63,5 +63,10 @@ public class Car {
     @JsonIgnore
     private Set<User> likedByUsers;
     
+    @Column(name = "seller_line_id", length = 100, nullable = true)
+    private String sellerLineId; // 賣家 Line ID
+    
+    @Column(nullable = false)
+    private boolean deleted = false;
     
 }

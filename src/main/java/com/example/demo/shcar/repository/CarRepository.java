@@ -25,4 +25,6 @@ public interface CarRepository extends JpaRepository<Car, Long> {
             Integer minYear,
             Integer maxYear
     );
+   
+   List<Car> findByDeletedFalse();//只查詢未刪除車輛資料的方法
 }

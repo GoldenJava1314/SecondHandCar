@@ -58,6 +58,8 @@ public class CarController {
         if (user == null) {
             throw new RuntimeException("未登入，請重新登入後再嘗試");
         }
+        
+        System.out.println("後端收到的 sellerLineId = " + carDTO.getSellerLineId());
 
         return carService.createCarFromUploadDTO(carDTO, user);
     }

@@ -38,6 +38,8 @@ public class CarService {
         if (seller == null) {
             throw new RuntimeException("建立車輛時 seller 資料遺失");
         }
+        
+        System.out.println("Service 收到的 sellerLineId = " + carDTO.getSellerLineId());
 
         Car car = new Car();
         car.setBrand(carDTO.getBrand());
@@ -47,19 +49,25 @@ public class CarService {
         car.setPrice(carDTO.getPrice());
         car.setImagesJson("[]");
         car.setSeller(seller);
+        car.setSellerLineId(carDTO.getSellerLineId());//把前端傳來的 Line ID 存入 Car
 
         Car saved = carRepository.save(car);
+        
+        System.out.println("儲存到 DB 的 sellerLineId = " + saved.getSellerLineId());
+        
         return convertToDTO(saved);
     }
 
     // 取得所有車輛
     public List<CarDTO> getAllCars() {
-        return carRepository.findAll().stream().map(this::convertToDTO).collect(Collectors.toList());
+    	return carRepository.findByDeletedFalse().stream().map(this::convertToDTO).collect(Collectors.toList());
     }
 
     // 取得單一
     public CarDTO getCarById(Long id) {
-        Car car = carRepository.findById(id).orElseThrow(() -> new RuntimeException("Car not found"));
+        Car car = carRepository.findById(id)
+        		.filter(c -> !c.isDeleted())   // ★ 避免看到刪除的車
+        		.orElseThrow(() -> new RuntimeException("Car not found"));
         return convertToDTO(car);
     }
 
@@ -149,12 +157,15 @@ public class CarService {
         Car car = carRepository.findById(carId)
                 .orElseThrow(() -> new RuntimeException("找不到車輛"));
 
-        // 可選：檢查該車是否是該使用者上傳
+        // ★ 確認使用者是車輛擁有者
         if (!car.getSeller().getId().equals(userId)) {
-            throw new RuntimeException("你沒有權限刪除這台車");
+            throw new RuntimeException("你沒有權限刪除此車輛");
         }
 
-        carRepository.delete(car);
+        // ★ 軟刪除
+        car.setDeleted(true);
+
+        carRepository.save(car);
     }
-    
 }
+    
