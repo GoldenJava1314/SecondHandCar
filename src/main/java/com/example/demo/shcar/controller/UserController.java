@@ -47,11 +47,21 @@ public class UserController {
     public ApiResponse<UserResponseDTO> login(@RequestBody UserLoginDTO loginDTO, HttpSession session) {
         try {
             UserResponseDTO userDTO = userService.login(loginDTO);
+
+            // 取得完整 User（含 isAdmin）
             User user = userService.findById(userDTO.getId());
+
+            // SESSION：存登入使用者
             session.setAttribute("LOGIN_USER", user);
+
+            // SESSION：存是否為管理員
+            session.setAttribute("LOGIN_USER_IS_ADMIN", user.isAdmin());
+
+            // 回傳給前端（ userDTO 要包含 isAdmin）
             return new ApiResponse<>(200, "登入成功", userDTO);
+
         } catch (RuntimeException e) {
-            return new ApiResponse<>(400, e.getMessage(), null);  // ✅ 直接回傳錯誤訊息
+            return new ApiResponse<>(400, e.getMessage(), null);
         }
     }
 }

@@ -167,5 +167,27 @@ public class CarService {
 
         carRepository.save(car);
     }
+    
+    //取得使用者刊登的車
+    public List<CarDTO> getCarsBySeller(Long sellerId) {
+        List<Car> cars = carRepository.findBySellerIdOrderByIdDesc(sellerId);
+        return cars.stream()
+            .map(this::convertToDTO)
+            .toList();
+    }
+    
+    //還原（restore）API
+    public void restoreCar(Long carId, Long userId) {
+        Car car = carRepository.findById(carId)
+                .orElseThrow(() -> new RuntimeException("車輛不存在"));
+
+        if (!car.getSeller().getId().equals(userId)) {
+            throw new RuntimeException("無權限還原");
+        }
+
+        car.setDeleted(false);
+        carRepository.save(car);
+    }
+    
 }
     

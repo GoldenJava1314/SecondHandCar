@@ -27,4 +27,7 @@ public interface CarRepository extends JpaRepository<Car, Long> {
     );
    
    List<Car> findByDeletedFalse();//只查詢未刪除車輛資料的方法
+   
+   List<Car> findBySellerIdOrderByIdDesc(Long sellerId);//查詢 seller 的車
+   
 }

@@ -16,6 +16,7 @@ public class UserResponseDTO {//（回傳前端用）
 	    private String Name;
 	    private String phone;
 	    private String email;
+	    private boolean isAdmin;
 
 	    // Getter & Setter
 	}

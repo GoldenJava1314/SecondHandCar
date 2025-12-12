@@ -202,6 +202,64 @@ public class CarController {
         return ResponseEntity.ok(list);
     }
     
+ // 查詢我的刊登 取得「我的刊登」API
+    @GetMapping("/my-cars")
+    public ApiResponse<List<CarDTO>> getMyCars(HttpSession session) {
+        User loginUser = (User) session.getAttribute("LOGIN_USER");
+        if (loginUser == null) {
+            return new ApiResponse<>(401, "未登入", null);
+        }
 
+        List<CarDTO> cars = carService.getCarsBySeller(loginUser.getId());
+        return new ApiResponse<>(200, "成功", cars);
+    }
+
+    //還原（restore）API
+    @PostMapping("/restore/{id}")
+    public ApiResponse<String> restoreCar(
+            @PathVariable Long id,
+            HttpSession session) {
+
+        User user = (User) session.getAttribute("LOGIN_USER");
+
+        if (user == null) {
+            return new ApiResponse<>(401, "未登入", null);
+        }
+
+        try {
+            carService.restoreCar(id, user.getId());
+            return new ApiResponse<>(200, "已還原", null);
+        } catch (Exception e) {
+            return new ApiResponse<>(400, e.getMessage(), null);
+        }
+    }
+    
+    @DeleteMapping("/hard-delete/{id}")
+    public ApiResponse<String> hardDelete(
+            @PathVariable Long id,
+            HttpSession session) {
+
+        User user = (User) session.getAttribute("LOGIN_USER");
+
+        if (user == null) {
+            return new ApiResponse<>(401, "未登入", null);
+        }
+
+        Car car = carRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("找不到車輛"));
+
+        // 只有自己能刪自己的車
+        if (!car.getSeller().getId().equals(user.getId())) {
+            return new ApiResponse<>(403, "你沒權限刪除別人的車", null);
+        }
+
+     // ✅ 先清除收藏關聯
+        car.getLikedByUsers().forEach(u -> u.getFavoriteCars().remove(car));
+        carRepository.save(car); // 或 userRepository.save(u) 也行
+        
+        // 真正刪除
+        carRepository.delete(car);
+        return new ApiResponse<>(200, "已永久刪除", null);
+    }
     
 }
