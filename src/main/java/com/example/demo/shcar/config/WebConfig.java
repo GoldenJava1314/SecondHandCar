@@ -15,6 +15,7 @@ public class WebConfig implements WebMvcConfigurer {
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry.addResourceHandler("/uploads/**")
                 .addResourceLocations("file:uploads/");
+               //.addResourceLocations("file:C:/Users/user/Pictures/二手車小專案/");
     }
 
     // global CORS config (allow credentials)
