@@ -1,5 +1,6 @@
 package com.example.demo.shcar.service;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -19,6 +20,7 @@ import com.example.demo.shcar.model.entity.Car;
 import com.example.demo.shcar.model.entity.User;
 import com.example.demo.shcar.repository.CarRepository;
 import com.example.demo.shcar.repository.UserRepository;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Service
@@ -60,14 +62,16 @@ public class CarService {
 
     // 取得所有車輛
     public List<CarDTO> getAllCars() {
-    	return carRepository.findByDeletedFalse().stream().map(this::convertToDTO).collect(Collectors.toList());
+    	return carRepository.findByDeletedFalse()
+    			.stream()
+    			.map(this::convertToDTO)
+    			.collect(Collectors.toList());
     }
 
     // 取得單一
     public CarDTO getCarById(Long id) {
-        Car car = carRepository.findById(id)
-        		.filter(c -> !c.isDeleted())   // ★ 避免看到刪除的車
-        		.orElseThrow(() -> new RuntimeException("查無此車輛資訊"));
+        Car car = carRepository.findByIdAndDeletedFalse(id)
+                .orElseThrow(() -> new RuntimeException("查無此車輛或已刪除"));
         return convertToDTO(car);
     }
 
@@ -78,8 +82,8 @@ public class CarService {
             throw new RuntimeException("沒有選擇任何圖片");
         }
 
-        Car car = carRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("找不到車輛"));
+        Car car = carRepository.findByIdAndDeletedFalse(id)
+                .orElseThrow(() -> new RuntimeException("車輛不存在或已刪除"));
 
         try {
             String uploadDir = "uploads/";
@@ -157,23 +161,57 @@ public class CarService {
         Car car = carRepository.findById(carId)
                 .orElseThrow(() -> new RuntimeException("找不到車輛"));
 
-        // ★ 確認使用者是車輛擁有者
         if (!car.getSeller().getId().equals(userId)) {
             throw new RuntimeException("你沒有權限刪除此車輛");
         }
 
-        // ★ 軟刪除
         car.setDeleted(true);
-
         carRepository.save(car);
     }
     
+    //刪單一圖片（主圖）
+    private void deleteImageIfExists(String imagePathStr) {
+        if (imagePathStr == null || imagePathStr.isBlank()) return;
+
+        // 如果你存的是 /uploads/xxx.webp，先去掉前面的路徑
+        String fileName = imagePathStr.replace("/uploads/", "");
+
+        Path path = Paths.get("uploads", fileName);
+
+        try {
+            Files.deleteIfExists(path);
+        } catch (IOException e) {
+            throw new RuntimeException("刪除圖片失敗：" + fileName);
+        }
+    }
+    
+    //刪多張圖片（JSON 陣列）
+    private void deleteImagesFromJson(String imagesJson) {
+        if (imagesJson == null || imagesJson.isBlank()) return;
+
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            List<String> images = mapper.readValue(
+                    imagesJson,
+                    new TypeReference<List<String>>() {}
+            );
+
+            for (String image : images) {
+                deleteImageIfExists(image);
+            }
+
+        } catch (Exception e) {
+            throw new RuntimeException("解析 imagesJson 失敗");
+        }
+    }
+    
+    
     //取得使用者刊登的車
     public List<CarDTO> getCarsBySeller(Long sellerId) {
-        List<Car> cars = carRepository.findBySellerIdOrderByIdDesc(sellerId);
-        return cars.stream()
-            .map(this::convertToDTO)
-            .toList();
+        return carRepository.findBySellerIdOrderByIdDesc(sellerId)
+                .stream()
+                .map(this::convertToDTO)
+                .toList();
     }
     
     //還原（restore）API

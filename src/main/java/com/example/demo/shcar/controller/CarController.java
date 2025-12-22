@@ -196,6 +196,7 @@ public class CarController {
         // 使用 DTO，避免 liking 互相序列化造成 400
         List<CarDTO> list = user.getFavoriteCars()
                                 .stream()
+                                .filter(car -> !car.isDeleted()) 
                                 .map(carService::convertToDTO)
                                 .toList();
 

@@ -21,4 +21,5 @@ public class CarDTO {
     private Long sellerId;
     private String sellerName;
     private String sellerLineId; // 回傳前端
+    private boolean deleted; // 軟刪除狀態（前端判斷按鈕用）
 }
