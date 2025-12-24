@@ -38,17 +38,17 @@ public class User {
     private String username;   // 登入用帳號
     
 	@Column(length = 255, nullable = false)
-    private String password;   // 登入密碼（建議之後用加密）
+    private String password;   // 登入密碼
 	
 	@Column(length = 255, nullable = true)
     private String sellerName;       // 使用者名稱（賣家名稱）
     
 	@Column(length = 255, nullable = true)
-	private String phone; // 聯絡電話
+	private String phone; 
 	
 	
     @Column(nullable = true)
-    private String email;      // 聯絡 email
+    private String email;      
     
     @ManyToMany(cascade = { CascadeType.PERSIST, CascadeType.MERGE })
     @JoinTable(

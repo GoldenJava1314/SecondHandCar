@@ -193,7 +193,7 @@ public class CarController {
         User user = userRepository.findById(loginUser.getId())
                         .orElseThrow(() -> new RuntimeException("找不到使用者"));
 
-        // 使用 DTO，避免 liking 互相序列化造成 400
+        
         List<CarDTO> list = user.getFavoriteCars()
                                 .stream()
                                 .filter(car -> !car.isDeleted()) 
@@ -249,17 +249,25 @@ public class CarController {
         Car car = carRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("找不到車輛"));
 
+        System.out.println("Hard delete carId=" + id + ", userId=" + user.getId());
+        System.out.println("car.seller = " + car.getSeller());
+        
         // 只有自己能刪自己的車
         if (!car.getSeller().getId().equals(user.getId())) {
             return new ApiResponse<>(403, "你沒權限刪除別人的車", null);
         }
-
-     // ✅ 先清除收藏關聯
-        car.getLikedByUsers().forEach(u -> u.getFavoriteCars().remove(car));
-        carRepository.save(car); // 或 userRepository.save(u) 也行
         
+        if (car.getSeller() == null) {
+            return new ApiResponse<>(400, "此車輛沒有賣家，無法刪除", null);
+        }
+
+        if (!car.getSeller().getId().equals(user.getId())) {
+            return new ApiResponse<>(403, "你沒權限刪除別人的車", null);
+        }
+
+                
         // 真正刪除
-        carRepository.delete(car);
+        carService.hardDeleteCar(id, user.getId());
         return new ApiResponse<>(200, "已永久刪除", null);
     }
     

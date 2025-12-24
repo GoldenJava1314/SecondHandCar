@@ -25,6 +25,20 @@ import lombok.Setter;
 @Entity
 @Table(name = "car")
 public class Car {
+	
+//	@Override
+//	public boolean equals(Object o) {
+//	    if (this == o) return true;
+//	    if (!(o instanceof Car)) return false;
+//	    Car car = (Car) o;
+//	    return id != null && id.equals(car.id);
+//	}
+//
+//	@Override
+//	public int hashCode() {
+//	    return getClass().hashCode();
+//	}
+	
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

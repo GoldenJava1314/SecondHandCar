@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -23,11 +24,17 @@ import com.example.demo.shcar.repository.UserRepository;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import jakarta.transaction.Transactional;
+
 @Service
 public class CarService {
 	
-	
+	@Value("${file.upload-dir}")
+	private String uploadDir;
 
+	@Autowired
+	private UserRepository userRepository;
+	
     @Autowired
     private CarRepository carRepository;
 
@@ -51,7 +58,7 @@ public class CarService {
         car.setPrice(carDTO.getPrice());
         car.setImagesJson("[]");
         car.setSeller(seller);
-        car.setSellerLineId(carDTO.getSellerLineId());//把前端傳來的 Line ID 存入 Car
+        car.setSellerLineId(carDTO.getSellerLineId());
 
         Car saved = carRepository.save(car);
         
@@ -137,7 +144,7 @@ public class CarService {
             return convertToDTO(carRepository.save(car));
 
         } catch (Exception e) {
-        	e.printStackTrace();  // ★ 這行很重要
+        	e.printStackTrace(); 
             throw new RuntimeException("圖片上傳失敗：" + e.getMessage());
             
         }
@@ -173,7 +180,7 @@ public class CarService {
     private void deleteImageIfExists(String imagePathStr) {
         if (imagePathStr == null || imagePathStr.isBlank()) return;
 
-        // 如果你存的是 /uploads/xxx.webp，先去掉前面的路徑
+        
         String fileName = imagePathStr.replace("/uploads/", "");
 
         Path path = Paths.get("uploads", fileName);
@@ -187,21 +194,19 @@ public class CarService {
     
     //刪多張圖片（JSON 陣列）
     private void deleteImagesFromJson(String imagesJson) {
-        if (imagesJson == null || imagesJson.isBlank()) return;
+        if (imagesJson == null || imagesJson.isBlank()) {
+            return;
+        }
 
         try {
             ObjectMapper mapper = new ObjectMapper();
-            List<String> images = mapper.readValue(
-                    imagesJson,
-                    new TypeReference<List<String>>() {}
-            );
+            List<String> urls = mapper.readValue(imagesJson, new TypeReference<>() {});
 
-            for (String image : images) {
-                deleteImageIfExists(image);
+            for (String url : urls) {
+                deleteFileIfExists(url);
             }
-
         } catch (Exception e) {
-            throw new RuntimeException("解析 imagesJson 失敗");
+            throw new RuntimeException("解析 imagesJson 失敗", e);
         }
     }
     
@@ -227,5 +232,62 @@ public class CarService {
         carRepository.save(car);
     }
     
-}
+    @Transactional
+    public void hardDeleteCar(Long carId, Long userId) {
+    	
+    	Car car = carRepository.findById(carId)
+    	        .orElseThrow(() -> new RuntimeException("Car not found"));
+
+    	    checkOwner(car, userId);
+
+    	    // 1️ 先清收藏（資料完整性）
+    	    removeCarFromFavorites(carId);
+
+    	    // 2️ 再刪圖片（失敗也沒關係）
+    	    deleteImagesFromJson(car.getImagesJson());
+
+    	    // 3️ 最後刪資料（一定要成功）
+    	    carRepository.delete(car);
+    	}
+    	
+
+    
+    private void deleteFileIfExists(String imageUrl) {
+        try {
+            // 1️ 只取檔名
+            String fileName = imageUrl.substring(imageUrl.lastIndexOf("/") + 1);
+
+            // 2️ 組成實體路徑
+            Path path = Paths.get(uploadDir).resolve(fileName).normalize();
+
+            System.out.println("實際刪除檔案：" + path.toAbsolutePath());
+
+            Files.deleteIfExists(path);
+        } catch (Exception e) {
+            throw new RuntimeException("刪除圖片失敗", e);
+        }
+    }
+    
+    private void checkOwner(Car car, Long userId) {
+        if (!car.getSeller().getId().equals(userId)) {
+            throw new RuntimeException("無權限操作此車輛");
+        }
+    }
+    
+    private void removeCarFromFavorites(Long carId) {
+        List<User> users = userRepository.findAll();
+
+        for (User u : users) {
+            u.getFavoriteCars().removeIf(c -> c.getId().equals(carId));
+        }
+
+        userRepository.saveAll(users);
+    }
+    
+    
+    }
+
+
+    
+
     
