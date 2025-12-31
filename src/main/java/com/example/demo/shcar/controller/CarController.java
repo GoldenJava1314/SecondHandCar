@@ -119,10 +119,20 @@ public class CarController {
         Car car = carRepository.findById(carId)
                         .orElseThrow(() -> new RuntimeException("找不到車輛"));
 
-        if (!user.getFavoriteCars().contains(car)) {
-            user.getFavoriteCars().add(car);
-            userRepository.save(user);
-        }
+        
+        boolean exists = user.getFavoriteCars()
+        	    .stream()
+        	    .anyMatch(c -> c.getId().equals(car.getId()));
+
+        	if (!exists) {
+        	    user.getFavoriteCars().add(car);
+        	    userRepository.save(user);
+        	}
+        
+//        if (!user.getFavoriteCars().contains(car)) {
+//            user.getFavoriteCars().add(car);
+//            userRepository.save(user);
+//        }
 
         // 更新 session
         session.setAttribute("LOGIN_USER", user);
