@@ -262,20 +262,17 @@ public class CarController {
         System.out.println("Hard delete carId=" + id + ", userId=" + user.getId());
         System.out.println("car.seller = " + car.getSeller());
         
+        // 無賣家（防呆）
+        if (car.getSeller() == null) {
+            return new ApiResponse<>(400, "此車輛沒有賣家，無法刪除", null);
+        }
+        
         // 只有自己能刪自己的車
         if (!car.getSeller().getId().equals(user.getId())) {
             return new ApiResponse<>(403, "你沒權限刪除別人的車", null);
         }
         
-        if (car.getSeller() == null) {
-            return new ApiResponse<>(400, "此車輛沒有賣家，無法刪除", null);
-        }
-
-        if (!car.getSeller().getId().equals(user.getId())) {
-            return new ApiResponse<>(403, "你沒權限刪除別人的車", null);
-        }
-
-                
+                        
         // 真正刪除
         carService.hardDeleteCar(id, user.getId());
         return new ApiResponse<>(200, "已永久刪除", null);
