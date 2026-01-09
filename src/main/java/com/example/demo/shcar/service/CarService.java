@@ -106,7 +106,6 @@ public class CarService {
                 }
             	
 
-                if (f.isEmpty()) continue;
 
                 String fileName = "car_" + id + "_" + System.currentTimeMillis()
                         + "_" + f.getOriginalFilename();
