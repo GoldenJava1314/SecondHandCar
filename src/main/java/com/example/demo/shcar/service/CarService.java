@@ -110,7 +110,7 @@ public class CarService {
                 String fileName = "car_" + id + "_" + System.currentTimeMillis()
                         + "_" + f.getOriginalFilename();
 
-                Path path = Paths.get(uploadDir + fileName);
+                Path path = Paths.get(uploadDir , fileName);
 
                 try (InputStream is = f.getInputStream()) {
                     Files.copy(is, path);
