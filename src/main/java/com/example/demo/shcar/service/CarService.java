@@ -167,7 +167,7 @@ public class CarService {
         Car car = carRepository.findById(carId)
                 .orElseThrow(() -> new RuntimeException("找不到車輛"));
 
-        if (!car.getSeller().getId().equals(userId)) {
+        if (car.getSeller() == null || !car.getSeller().getId().equals(userId)) {
             throw new RuntimeException("你沒有權限刪除此車輛");
         }
 
