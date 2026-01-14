@@ -239,10 +239,10 @@ public class CarService {
 
     	    checkOwner(car, userId);
 
-    	    // 1️ 先清收藏（資料完整性）
+    	    // 1️ 先清收藏（資料完整性）/先清關聯資料（避免 FK 問題）
     	    removeCarFromFavorites(carId);
 
-    	    // 2️ 再刪圖片（失敗也沒關係）
+    	    // 2️ 再刪圖片/檔案（失敗也沒關係/非交易資源）
     	    deleteImagesFromJson(car.getImagesJson());
 
     	    // 3️ 最後刪資料（一定要成功）
