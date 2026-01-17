@@ -1,6 +1,7 @@
 package com.example.demo.shcar.service;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -35,8 +36,10 @@ public class ImageService {
 
             // 3. 儲存到本地 uploads/
             Path path = Paths.get(UPLOAD_DIR + newFileName);
-            Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
 
+            try (InputStream is = file.getInputStream()) {
+                Files.copy(is, path, StandardCopyOption.REPLACE_EXISTING);
+            }
             // 4. 回傳可給前端使用的 URL
             fileUrls.add("/uploads/" + newFileName);
         }
