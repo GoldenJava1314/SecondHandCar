@@ -64,5 +64,14 @@ public class User {
     
     private boolean isAdmin;  // 預設 false 永久刪除（Hard Delete，後台管理者限定）
     
+//    @Column(nullable = false)
+//    private int loginFailCount = 0;   // 登入失敗次數
+//
+//    @Column
+//    private LocalDateTime lockUntil;  // 鎖到什麼時候
+//
+//    @Column(nullable = false)
+//    private boolean locked = false;   // 是否被鎖
+    
     
 }
