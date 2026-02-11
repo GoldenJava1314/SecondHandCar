@@ -3,6 +3,7 @@ package com.example.demo.shcar.controller;
 import javax.security.auth.login.LoginException;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -14,6 +15,7 @@ import com.example.demo.shcar.repository.UserRepository;
 import com.example.demo.shcar.service.UserService;
 import com.example.demo.shcar.response.ApiResponse;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 
 
@@ -64,4 +66,15 @@ public class UserController {
             return new ApiResponse<>(400, e.getMessage(), null);
         }
     }
+    
+    @PostMapping("/auth/logout")
+    public ResponseEntity<?> logout(HttpServletRequest request) {
+    	HttpSession session = request.getSession(false);
+        if (session != null) {
+            session.invalidate();
+        }
+        return ResponseEntity.ok().build();
+    }
+    
+    
 }
