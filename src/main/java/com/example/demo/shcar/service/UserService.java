@@ -10,12 +10,16 @@ import com.example.demo.shcar.model.dto.UserRegisterDTO;
 import com.example.demo.shcar.model.dto.UserResponseDTO;
 import com.example.demo.shcar.model.entity.User;
 import com.example.demo.shcar.repository.UserRepository;
+import com.example.demo.shcar.security.JwtUtil;
 
 
 
 @Service
 public class UserService {
 
+	@Autowired
+    private JwtUtil jwtUtil;
+	
     @Autowired
     private UserRepository userRepository;
 
@@ -47,24 +51,30 @@ public class UserService {
         return response;
     }
 
-    // 登入
-    public UserResponseDTO login(UserLoginDTO loginDTO) {
-        //  新增：檢查空輸入
+    // 登入（回傳完整 User）
+    public User login(UserLoginDTO loginDTO) {
+
         if (loginDTO.getUsername() == null || loginDTO.getUsername().trim().isEmpty() ||
             loginDTO.getPassword() == null || loginDTO.getPassword().trim().isEmpty()) {
             throw new RuntimeException("帳號或密碼不能為空");
         }
 
         User user = userRepository.findByUsername(loginDTO.getUsername().trim());
+
         if (user == null) {
-            throw new RuntimeException("用戶不存在");
+            throw new RuntimeException("帳號或密碼錯誤");
         }
 
         if (!BCrypt.checkpw(loginDTO.getPassword(), user.getPassword())) {
-            throw new RuntimeException("密碼錯誤");
+            throw new RuntimeException("帳號或密碼錯誤");
         }
 
-        return modelMapper.map(user, UserResponseDTO.class);
+        return user;
+    }
+
+        
+        
+//        return modelMapper.map(user, UserResponseDTO.class);
         
 //        <<<登入失敗次數鎖帳號>>>
 //        User user = userRepository.findByUsername(loginDTO.getUsername());
@@ -113,7 +123,7 @@ public class UserService {
 //
 //        return modelMapper.map(user, UserResponseDTO.class);
         
-    }
+//    }
     
     public User findById(Long id) {
         return userRepository.findById(id)

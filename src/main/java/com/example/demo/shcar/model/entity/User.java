@@ -62,6 +62,7 @@ public class User {
     @Column(length = 100, nullable = true)
     private String sellerLineId;  // 賣家 Line ID
     
+    @Column(name = "is_admin")
     private boolean isAdmin;  // 預設 false 永久刪除（Hard Delete，後台管理者限定）
     
 //    @Column(nullable = false)
